@@ -1,0 +1,237 @@
+# Root Query type for fetching data
+type Query {
+  # User accounts
+  "Fetch a specific user by ID"
+  user(id: ID!): User
+  "Fetch the currently logged-in user"
+  me: User!
+
+  # Accounts
+  "Fetch all accounts for the logged-in user"
+  userAccounts: [Account!]!
+  "Fetch details of a specific account by ID"
+  account(id: ID!): Account
+
+  # Transactions
+  "Fetch all transactions for a specific account"
+  transactionsForAccount(accountId: ID!): [Transaction!]!
+  "Fetch a specific transaction by ID"
+  transaction(id: ID!): Transaction
+}
+
+# Root Mutation type for modifying data
+type Mutation {
+  # User accounts
+  "Update the profile information of the currently logged-in user"
+  updateProfile(updateProfileInput: UpdateProfileInput): UpdateProfileResponse!
+
+  # Accounts
+  "Create a new account for the currently authenticated user"
+  createAccount(createAccountInput: CreateAccountInput!): CreateAccountResponse!
+  "Update an existing account"
+  updateAccount(
+    accountId: ID!
+    updateAccountInput: UpdateAccountInput!
+  ): UpdateAccountResponse!
+  "Close an account"
+  closeAccount(accountId: ID!): CloseAccountResponse!
+
+  # Transactions
+  "Transfer funds between two accounts"
+  transferFunds(transferFundsInput: TransferFundsInput!): TransferFundsResponse!
+  "Create a new transaction"
+  createTransaction(
+    createTransactionInput: CreateTransactionInput!
+  ): CreateTransactionResponse!
+}
+
+# User Account Details
+
+"""
+Represents a bank user with common properties.
+"""
+interface User {
+  id: ID!
+  "The user's first and last name"
+  name: String!
+  "The user's email address"
+  email: String!
+}
+
+"""
+Input for updating a user's profile information.
+"""
+input UpdateProfileInput {
+  "The user's first and last name"
+  name: String
+  "The user's email address"
+  email: String
+}
+
+"""
+The response after updating a user profile.
+"""
+type UpdateProfileResponse implements MutationResponse {
+  code: Int!
+  success: Boolean!
+  message: String!
+  user: User
+}
+
+# Account Details
+
+"""
+An account in the bank with details like balance and type.
+"""
+type Account {
+  id: ID!
+  "The account number"
+  accountNumber: String!
+  "The account balance"
+  balance: Float!
+  "The type of the account"
+  accountType: AccountType!
+  "The owner of the account"
+  owner: User!
+  "The transactions associated with this account"
+  transactions: [Transaction!]!
+}
+
+"""
+Types of accounts available in the bank.
+"""
+enum AccountType {
+  SAVINGS
+  CHECKING
+  CREDIT
+}
+
+"""
+Input for creating a new account.
+"""
+input CreateAccountInput {
+  "The type of the account"
+  accountType: AccountType!
+}
+
+"""
+Input for updating an existing account.
+"""
+input UpdateAccountInput {
+  "The balance to update"
+  balance: Float
+  "The type of the account"
+  accountType: AccountType
+}
+
+"""
+Response after creating a new account.
+"""
+type CreateAccountResponse implements MutationResponse {
+  code: Int!
+  success: Boolean!
+  message: String!
+  account: Account
+}
+
+"""
+Response after updating an account.
+"""
+type UpdateAccountResponse implements MutationResponse {
+  code: Int!
+  success: Boolean!
+  message: String!
+  account: Account
+}
+
+"""
+Response after closing an account.
+"""
+type CloseAccountResponse implements MutationResponse {
+  code: Int!
+  success: Boolean!
+  message: String!
+}
+
+# Transactions Details
+
+"""
+A transaction represents an operation involving an account.
+"""
+type Transaction {
+  id: ID!
+  "The account associated with the transaction"
+  account: Account!
+  "The type of transaction (e.g., deposit, withdrawal)"
+  transactionType: TransactionType!
+  "The amount of money involved in the transaction"
+  amount: Float!
+  "The date and time of the transaction"
+  date: String!
+  "A description of the transaction"
+  description: String
+}
+
+"""
+Types of transactions available.
+"""
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+}
+
+"""
+Input for creating a new transaction.
+"""
+input CreateTransactionInput {
+  "The account ID for the transaction"
+  accountId: ID!
+  "The type of transaction"
+  transactionType: TransactionType!
+  "The amount of money involved"
+  amount: Float!
+  "A description of the transaction"
+  description: String
+}
+
+"""
+Response after creating a transaction.
+"""
+type CreateTransactionResponse implements MutationResponse {
+  code: Int!
+  success: Boolean!
+  message: String!
+  transaction: Transaction
+}
+
+"""
+Input for transferring funds between accounts.
+"""
+input TransferFundsInput {
+  "The source account ID"
+  fromAccountId: ID!
+  "The destination account ID"
+  toAccountId: ID!
+  "The amount of money to transfer"
+  amount: Float!
+  "A description of the transfer"
+  description: String
+}
+
+"""
+Response after transferring funds between accounts.
+"""
+type TransferFundsResponse implements MutationResponse {
+  code: Int!
+  success: Boolean!
+  message: String!
+  transaction: Transaction
+}
+
+# Interface for mutation responses
+interface MutationResponse {
+  code: Int!
+  success: Boolean!
+  message: String!
+}
